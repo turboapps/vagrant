@@ -1,6 +1,4 @@
-require "vagrant/turbo/version"
-
-module Vagrant
+module VagrantPlugins
   module Turbo
     # Your code goes here...
   end
