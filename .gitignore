@@ -1,9 +1,14 @@
-/.bundle/
-/.yardoc
-/Gemfile.lock
-/_yardoc/
-/coverage/
-/doc/
-/pkg/
-/spec/reports/
-/tmp/
+# Bundler/Rubygems
+*.gem
+.bundle
+pkg/*
+tags
+Gemfile.lock
+
+# Vagrant
+.vagrant
+Vagrantfile
+
+# RVM files for gemset/ruby setting
+.ruby-*
+.rvmrc
