@@ -4,6 +4,11 @@ module VagrantPlugins
       name "turbo"
       description "Provides support for Turbo."
 
+      config(:turbo, :provisioner) do
+        require_relative "config"
+        Config
+      end
+
       provisioner(:turbo) do
         require_relative "provisioner"
         Provisioner
