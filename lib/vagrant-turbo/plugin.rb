@@ -15,6 +15,16 @@ module VagrantPlugins
         require_relative "provisioner"
         Provisioner
       end
+
+      guest_capability(:windows, :turbo_installed) do
+        require_relative "cap/turbo_installed"
+        Cap::TurboInstalled
+      end
+
+      guest_capability(:windows, :turbo_install) do
+        require_relative "cap/turbo_install"
+        Cap::TurboInstall
+      end
     end
   end
 end

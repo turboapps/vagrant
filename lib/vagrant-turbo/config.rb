@@ -3,24 +3,30 @@ require "pathname"
 module VagrantPlugins
   module Turbo
     class Config < Vagrant.plugin(2, :config)
-      attr_accessor :layers
+      attr_accessor :images
       attr_accessor :name
       attr_accessor :inline
       attr_accessor :path
+      attr_accessor :install
+      attr_accessor :import_images
 
       def initialize
         super
-        @layers = UNSET_VALUE
-        @name   = UNSET_VALUE
-        @inline = UNSET_VALUE
-        @path   = UNSET_VALUE
+        @images        = UNSET_VALUE
+        @name          = UNSET_VALUE
+        @inline        = UNSET_VALUE
+        @path          = UNSET_VALUE
+        @install       = UNSET_VALUE
+        @import_images = UNSET_VALUE
       end
 
       def finalize!
-        @layers = "clean"   if @layers == UNSET_VALUE
-        @name   = "default" if @name   == UNSET_VALUE
-        @inline = nil       if @inline == UNSET_VALUE
-        @path   = nil       if @path   == UNSET_VALUE
+        @images        = "clean"   if @images        == UNSET_VALUE
+        @name          = "default" if @name          == UNSET_VALUE
+        @inline        = nil       if @inline        == UNSET_VALUE
+        @path          = nil       if @path          == UNSET_VALUE
+        @install       = false     if @install       == UNSET_VALUE
+        @import_images = nil       if @import_images == UNSET_VALUE
       end
 
       def validate(machine)

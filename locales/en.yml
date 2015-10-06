@@ -7,3 +7,6 @@ en:
     path_and_inline_set: "Only one of `path` or `inline` may be set."
     path_invalid: "`path` for turbo provisioner does not exist on the host system: %{path}"
     running: "Running: %{script}"
+    check_install: "Checking for Turbo installation..."
+    already_installed: "Turbo is installed on this machine. Skipping installation."
+    not_installed: "Turbo is not installed on this machine. Installing..."
