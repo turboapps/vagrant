@@ -1,3 +1,5 @@
+require "vagrant"
+
 module VagrantPlugins
   module Turbo
     class Plugin < Vagrant.plugin(2)
