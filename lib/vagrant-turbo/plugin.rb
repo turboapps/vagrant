@@ -25,6 +25,11 @@ module VagrantPlugins
         require_relative "cap/turbo_install"
         Cap::TurboInstall
       end
+
+      guest_capability(:windows, :turbo_import) do
+        require_relative "cap/turbo_import"
+        Cap::TurboImport
+      end
     end
   end
 end

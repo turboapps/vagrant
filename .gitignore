@@ -8,6 +8,7 @@ Gemfile.lock
 # Vagrant
 .vagrant
 Vagrantfile
+images
 
 # RVM files for gemset/ruby setting
 .ruby-*

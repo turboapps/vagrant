@@ -9,7 +9,6 @@ module VagrantPlugins
           machine.communicate.sudo("(new-object System.Net.WebClient).DownloadFile(#{INSTALLER_URL}, #{INSTALLER_PATH})")
           # Turbo installer may return non-zero code, when it is not really failed
           machine.communicate.sudo("& #{INSTALLER_PATH} | Out-Null; exit 0")
-          machine.communicate.sudo("rm #{INSTALLER_PATH}")
         end
       end
     end

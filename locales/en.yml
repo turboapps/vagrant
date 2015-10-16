@@ -1,12 +1,17 @@
 en:
   vagrant_turbo:
+    invalid_type: "Invalid value of `%{param}`. It must be of type %{type}."
+    no_path_or_inline: "One of `path` or `inline` must be set."
+    path_and_inline_set: "Only one of `path` or `inline` may be set."
+    path_invalid: "`path` for Turbo provisioner does not exist on the host system: %{path}"
+    images_folders_invalid: "`images_folder` for Turbo provisioner does not exist on the host system: %{path}"
     invalid_encoding: |-
       Invalid encoding '%{actual}' for script at '%{path}'.
       Must be '%{default}' or UTF-8.
-    no_path_or_inline: "One of `path` or `inline` must be set."
-    path_and_inline_set: "Only one of `path` or `inline` may be set."
-    path_invalid: "`path` for turbo provisioner does not exist on the host system: %{path}"
-    running: "Running: %{script}"
+
     check_install: "Checking for Turbo installation..."
     already_installed: "Turbo is installed on this machine. Skipping installation."
     not_installed: "Turbo is not installed on this machine. Installing..."
+
+    no_images: "There are no images exist in the directory on the host system, skipping it: %{path}"
+    import_image: "Importing image on the guest system: %{path}"
