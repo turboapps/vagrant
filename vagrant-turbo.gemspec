@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version       = VagrantPlugins::Turbo::VERSION
   s.platform      = Gem::Platform::RUBY
   s.authors       = ["Michael Kalygin"]
-  s.email         = ["mkalygin@spoon.net"]
+  s.email         = ["mkalygin@turbo.net"]
   s.summary       = %q{TODO: Write a short summary, because Rubygems requires one.}
   s.description   = %q{TODO: Write a longer description or delete this line.}
   s.homepage      = "TODO: Put your gem's website or public repo URL here."

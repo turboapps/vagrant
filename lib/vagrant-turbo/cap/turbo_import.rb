@@ -3,7 +3,7 @@ module VagrantPlugins
     module Cap
       module TurboImport
         def self.turbo_import(machine, path)
-          machine.communicate.sudo("turbo import svm \"#{path}\"")
+          machine.communicate.sudo("turbo import svm \"#{path}\" --overwrite")
         end
       end
     end

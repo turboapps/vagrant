@@ -3,49 +3,54 @@ require "pathname"
 module VagrantPlugins
   module Turbo
     class Config < Vagrant.plugin(2, :config)
-      attr_accessor :images
-      attr_accessor :name
+      attr_accessor :login
+      attr_accessor :password
       attr_accessor :inline
       attr_accessor :path
       attr_accessor :install
       attr_reader :images_folders
+      attr_reader :upload_path
 
       def initialize
         super
-        @images  = UNSET_VALUE
-        @name    = UNSET_VALUE
-        @inline  = UNSET_VALUE
-        @path    = UNSET_VALUE
-        @install = UNSET_VALUE
+        @login    = UNSET_VALUE
+        @password = UNSET_VALUE
+        @inline   = UNSET_VALUE
+        @path     = UNSET_VALUE
+        @install  = UNSET_VALUE
 
         # Populated with 'images_folder' method
         @images_folders = []
+
+        # Upload path of Turbo script
+        @upload_path = "C:\\tmp\\vagrant-turbo"
       end
 
       def finalize!
-        @images  = "clean"   if @images  == UNSET_VALUE
-        @name    = "default" if @name    == UNSET_VALUE
-        @inline  = nil       if @inline  == UNSET_VALUE
-        @path    = nil       if @path    == UNSET_VALUE
-        @install = false     if @install == UNSET_VALUE
+        @login    = nil       if @login    == UNSET_VALUE
+        @password = nil       if @password == UNSET_VALUE
+        @inline   = nil       if @inline   == UNSET_VALUE
+        @path     = nil       if @path     == UNSET_VALUE
+        @install  = false     if @install  == UNSET_VALUE
       end
 
       def validate(machine)
         errors = _detected_errors
 
         # Validate types of parameters
-        errors << I18n.t("vagrant_turbo.invalid_type",
-          param: "images", type: "String") if images && !images.is_a?(String)
-        errors << I18n.t("vagrant_turbo.invalid_type",
-          param: "name", type: "String") if name && !name.is_a?(String)
-        errors << I18n.t("vagrant_turbo.invalid_type",
-          param: "inline", type: "String") if inline && !inline.is_a?(String)
-        errors << I18n.t("vagrant_turbo.invalid_type",
-          param: "path", type: "String") if path && !path.is_a?(String)
-        errors << I18n.t("vagrant_turbo.invalid_type",
-          param: "install", type: "Boolean") if !install.nil? && !!install != install
+        errors << I18n.t("vagrant_turbo.invalid_type", param: "login", type: "String") if \
+          login && !login.is_a?(String)
+        errors << I18n.t("vagrant_turbo.invalid_type", param: "password", type: "String") if \
+          password && !password.is_a?(String)
+        errors << I18n.t("vagrant_turbo.invalid_type", param: "inline", type: "String") if \
+          inline && !inline.is_a?(String)
+        errors << I18n.t("vagrant_turbo.invalid_type", param: "path", type: "String") if \
+          path && !path.is_a?(String)
+        errors << I18n.t("vagrant_turbo.invalid_type", param: "install", type: "Boolean") if \
+          !install.nil? && !!install != install
 
         # Validate that the parameters are properly set
+        errors << I18n.t("vagrant_turbo.login_required") if !login || !password
         errors << I18n.t("vagrant_turbo.path_and_inline_set") if path && inline
         errors << I18n.t("vagrant_turbo.no_path_or_inline") if !path && !inline
 
@@ -77,7 +82,7 @@ module VagrantPlugins
         { "turbo provisioner" => errors }
       end
 
-      def images_folder local_path, remote_path, opts = {}
+      def images_folder(local_path, remote_path, opts = {})
         @images_folders << [local_path, remote_path, opts]
       end
     end
