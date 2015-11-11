@@ -1,13 +1,21 @@
-require "log4r"
-require "pathname"
-require "tempfile"
+require 'log4r'
+require 'pathname'
+require 'tempfile'
+require_relative 'client'
+require_relative 'installer'
 
 module VagrantPlugins
   module Turbo
+    class TurboError < Vagrant::Errors::VagrantError
+      error_namespace('vagrant.provisioners.turbo')
+    end
+
     class Provisioner < Vagrant.plugin(2, :provisioner)
-      def initialize(machine, config)
+      def initialize(machine, config, client = nil, installer = nil)
         super(machine, config)
-        @logger = Log4r::Logger.new("vagrant::turbo::provisioner")
+
+        @client = client || Client.new(@machine)
+        @installer = installer || Installer.new(@machine)
       end
 
       def configure(root_config)
@@ -17,35 +25,15 @@ module VagrantPlugins
       end
 
       def provision
-        install_turbo
-        login_hub
-        import_images
-        execute_script
-      end
+        @logger = Log4r::Logger.new('vagrant::provisioners::turbo')
 
-      def cleanup
+        @installer.ensure_installed
+
+        @logger.info('Login to the hub')
+        @client.login(config.login, config.password)
       end
 
       private
-
-      def install_turbo
-        return if !config.install
-
-        machine.ui.detail(I18n.t("vagrant_turbo.check_install"))
-        is_turbo_installed = machine.guest.capability(:turbo_installed)
-
-        if is_turbo_installed
-          machine.ui.detail(I18n.t("vagrant_turbo.already_installed"))
-        else
-          machine.ui.detail(I18n.t("vagrant_turbo.not_installed"))
-          machine.guest.capability(:turbo_install)
-        end
-      end
-
-      def login_hub
-        machine.ui.detail(I18n.t("vagrant_turbo.login", login: config.login))
-        machine.communicate.sudo("turbo login #{config.login} #{config.password}")
-      end
 
       def import_images
         config.images_folders.each do |local_path, remote_path, opts|
@@ -60,7 +48,7 @@ module VagrantPlugins
           remote_images_paths = local_images_paths.map { |p| p.expand_path(remote_path).to_s.gsub("/", "\\") }
           remote_images_paths.each do |p|
             machine.ui.detail(I18n.t("vagrant_turbo.import_image", path: p))
-            machine.guest.capability(:turbo_import, p)
+            @client.import(p)
           end
         end
       end

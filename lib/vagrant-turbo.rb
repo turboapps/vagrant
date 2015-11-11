@@ -1,11 +1,11 @@
-require "vagrant-turbo/plugin"
+require 'vagrant-turbo/plugin'
 
 module VagrantPlugins
   module Turbo
-    LOCALES_PATH = "locales/en.yml"
+    LOCALES_PATH = 'locales/en.yml'
 
     def self.root
-      File.expand_path "../..", __FILE__
+      File.expand_path '../..', __FILE__
     end
 
     def self.setup_locales

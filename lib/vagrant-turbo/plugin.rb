@@ -1,34 +1,31 @@
-require "vagrant"
+require 'vagrant'
 
 module VagrantPlugins
   module Turbo
     class Plugin < Vagrant.plugin(2)
       name "turbo"
-      description "Provides support for Turbo."
+      description <<-DESC
+      Provides support for Turbo
+      DESC
 
       config(:turbo, :provisioner) do
-        require_relative "config"
+        require_relative 'config'
         Config
       end
 
-      provisioner(:turbo) do
-        require_relative "provisioner"
-        Provisioner
-      end
-
       guest_capability(:windows, :turbo_installed) do
-        require_relative "cap/turbo_installed"
-        Cap::TurboInstalled
+        require_relative 'cap/windows/turbo_installed'
+        Cap::Windows::TurboInstalled
       end
 
       guest_capability(:windows, :turbo_install) do
-        require_relative "cap/turbo_install"
-        Cap::TurboInstall
+        require_relative 'cap/windows/turbo_install'
+        Cap::Windows::TurboInstall
       end
 
-      guest_capability(:windows, :turbo_import) do
-        require_relative "cap/turbo_import"
-        Cap::TurboImport
+      provisioner(:turbo) do
+        require_relative 'provisioner'
+        Provisioner
       end
     end
   end

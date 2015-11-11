@@ -1,4 +1,4 @@
-require "pathname"
+require 'pathname'
 
 module VagrantPlugins
   module Turbo
@@ -55,29 +55,29 @@ module VagrantPlugins
         errors << I18n.t("vagrant_turbo.no_path_or_inline") if !path && !inline
 
         # Validate the existence of a script to upload
-        if path
-          expanded_path = Pathname.new(path).expand_path(machine.env.root_path)
-          if !expanded_path.file?
-            errors << I18n.t("vagrant_turbo.path_invalid", path: expanded_path)
-          else
-            data = expanded_path.read(16)
-            if data && !data.valid_encoding?
-              errors << I18n.t(
-                "vagrant_turbo.invalid_encoding",
-                actual: data.encoding.to_s,
-                default: Encoding.default_external.to_s,
-                path: expanded_path.to_s)
-            end
-          end
-        end
+        # if path
+        #  expanded_path = Pathname.new(path).expand_path(machine.env.root_path)
+        #  if !expanded_path.file?
+        #    errors << I18n.t("vagrant_turbo.path_invalid", path: expanded_path)
+        #  else
+        #    data = expanded_path.read(16)
+        #    if data && !data.valid_encoding?
+        #      errors << I18n.t(
+        #        "vagrant_turbo.invalid_encoding",
+        #        actual: data.encoding.to_s,
+        #        default: Encoding.default_external.to_s,
+        #        path: expanded_path.to_s)
+        #    end
+        #  end
+        #end
 
         # Validate images folders
-        images_folders.each do |local_path, remote_path, opts|
-          expanded_path = Pathname.new(local_path).expand_path(machine.env.root_path)
-          if !expanded_path.directory?
-            errors << I18n.t("vagrant_turbo.images_folder_invalid", path: expanded_path)
-          end
-        end
+        #images_folders.each do |local_path, remote_path, opts|
+        #  expanded_path = Pathname.new(local_path).expand_path(machine.env.root_path)
+        #  if !expanded_path.directory?
+        #    errors << I18n.t("vagrant_turbo.images_folder_invalid", path: expanded_path)
+        #  end
+        #end
 
         { "turbo provisioner" => errors }
       end
