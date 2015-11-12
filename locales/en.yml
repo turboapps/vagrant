@@ -14,8 +14,12 @@ en:
     already_installed: "Turbo is installed on this machine. Skipping installation..."
     not_installed: "Turbo is not installed on this machine. Installing..."
 
+    no_images_to_run: "No images specified to run in the container"
+
     no_images: "There are no images exist in the directory on the host system, skipping it: %{path}"
     import_image: "Importing image on the guest system: %{path}..."
 
     login: "Login as %{login}..."
     running: "Running %{script}..."
+    invalid_parameter: "Unknown `%{param}` value. Use one of valid values: %{values}"
+    startup_file_with_path_or_inline: "Startup file cannot be set if path or inline are used"

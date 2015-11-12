@@ -3,7 +3,7 @@ require 'vagrant'
 module VagrantPlugins
   module Turbo
     class Plugin < Vagrant.plugin(2)
-      name "turbo"
+      name 'turbo'
       description <<-DESC
       Provides support for Turbo
       DESC

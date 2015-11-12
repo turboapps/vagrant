@@ -3,6 +3,7 @@ module VagrantPlugins
     class Client
       def initialize(machine)
         @machine = machine
+        @logger = Log4r::Logger.new('vagrant::provisioners::turbo::client')
       end
 
       def login(username, password)
@@ -14,14 +15,35 @@ module VagrantPlugins
         run_with_output("turbo import svm \"#{svm_path}\" --overwrite")
       end
 
-      def run_file(filepath)
-        run_with_output("turbo run clean --attach -- #{filepath}")
+      def run(config)
+        command = 'turbo run'
+
+        # HACK - list of images must be passed in quotes. Otherwise Vagrant will split command into two.
+        command << ' ' << "\"#{config.images.join(',')}\""
+        command << " --using=\"#{config.using.join(',')}\"" if config.using.any?
+        command << " --name=#{config.name}" if config.name
+        command << " --mount \"#{config.script_dir}\"=\"#{config.script_dir}\"" if config.script_dir
+
+        # TODO check if detach or enable sync are passed in future
+        command << ' --attach' if config.future !~ /attach/i
+        command << ' --disable-sync' if config.future !~ /disable-sync/i
+        command << ' ' << config.future if config.future
+
+        startup_file = config.startup_file
+        startup_file.gsub!('/', '\\')
+        startup_file = "c:#{startup_file}" if startup_file.start_with?("\\")
+        command << " --startup-file=\"#{startup_file}\""
+
+        @logger.debug('Executing command: ' + command)
+        @machine.ui.info('Executing command: ' + command)
+
+        run_with_output(command)
       end
 
       private
 
       def run_with_output(command)
-        @machine.communicate.sudo(command) do |type, data|
+        @machine.communicate.execute(command) do |type, data|
           handle_comm(type, data)
         end
       end
