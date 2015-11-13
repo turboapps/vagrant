@@ -25,23 +25,27 @@ module VagrantPlugins
         @logger.info('Ensure turbo installed')
         @installer.ensure_installed
 
-        if config.login && config.password
-          @logger.info('Login to the hub')
-          @client.login(config.login, config.password)
-        end
-
-        config.commands.each do |config|
-          if config.is_a?(ImportConfig)
-            import_svm(config)
+        config.commands.each do |command|
+          if command.is_a?(ImportConfig)
+            import(command)
           end
-        end
 
-        if config.run?
-          run!(config)
+          if command.is_a?(LoginConfig)
+            login(command)
+          end
+
+          if config.run?
+            run!(config)
+          end
         end
       end
 
       private
+
+      def login (login_config)
+        @logger.info('Login to the hub')
+        @client.login(login_config)
+      end
 
       def run!(config)
         config.startup_file = build_startup_file(config)
@@ -114,7 +118,7 @@ module VagrantPlugins
         end
       end
 
-      def import_svm(import_config)
+      def import(import_config)
         import_config.path = expand_guest_path(import_config.path)
         @client.import(import_config)
       end
@@ -164,7 +168,6 @@ module VagrantPlugins
           machine.ui.info(data, options)
         end
       end
-
     end
   end
 end

@@ -3,9 +3,6 @@ require 'pathname'
 module VagrantPlugins
   module Turbo
     class Config < Vagrant.plugin('2', :config)
-      attr_accessor :login
-      attr_accessor :password
-
       attr_accessor :inline
       attr_accessor :path
       attr_accessor :script_dir
@@ -20,8 +17,6 @@ module VagrantPlugins
 
       def initialize
         super
-        @login = UNSET_VALUE
-        @password = UNSET_VALUE
 
         @name = UNSET_VALUE
         @images = UNSET_VALUE
@@ -57,19 +52,6 @@ module VagrantPlugins
 
       def validate(machine)
         errors = _detected_errors
-
-        # Check login and password
-        if login || password
-          if login && !login.is_a?(String)
-            I18n.t('vagrant_turbo.invalid_type', param: 'login', type: 'String')
-          end
-
-          if password && password.is_a?(String)
-            I18n.t('vagrant_turbo.invalid_type', param: 'password', type: 'String')
-          end
-
-          errors << I18n.t('vagrant_turbo.login_required') if !login || !password
-        end
 
         # Check run parameters
         if isolate
@@ -121,6 +103,13 @@ module VagrantPlugins
         @commands
       end
 
+      def login(_name, **_options, &block)
+        command = LoginConfig.new
+        block.call(command)
+        @commands << command
+        nil
+      end
+
       def import(_name, **_options, &block)
         command = ImportConfig.new
         block.call(command)
@@ -130,6 +119,34 @@ module VagrantPlugins
 
       def run?
         images.any?
+      end
+    end
+
+    class LoginConfig < Vagrant.plugin('2', :config)
+      attr_accessor :username
+      attr_accessor :password
+
+      def initialize
+        @username = UNSET_VALUE
+        @password = UNSET_VALUE
+      end
+
+      def validate(_machine)
+        errors = _detected_errors
+
+        # Check login and password
+        if username && !username.is_a?(String)
+          I18n.t('vagrant_turbo.invalid_type', param: 'username', type: 'String')
+        end
+
+        if password && password.is_a?(String)
+          I18n.t('vagrant_turbo.invalid_type', param: 'password', type: 'String')
+        end
+
+        errors << I18n.t('vagrant_turbo.login_required') if !username || !password
+      end
+
+      def finalize!
       end
     end
 

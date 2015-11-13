@@ -19,7 +19,7 @@ en:
     no_images: "There are no images exist in the directory on the host system, skipping it: %{path}"
     import_image: "Importing image on the guest system: %{path}..."
 
-    login: "Login as %{login}..."
+    login: "Login as %{username}..."
     running: "Running %{script}..."
     invalid_parameter: "Unknown `%{param}` value. Use one of valid values: %{values}"
     startup_file_with_path_or_inline: "Startup file cannot be set if path or inline are used"

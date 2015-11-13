@@ -6,9 +6,9 @@ module VagrantPlugins
         @logger = Log4r::Logger.new('vagrant::provisioners::turbo::client')
       end
 
-      def login(username, password)
-        @machine.ui.info(I18n.t('vagrant_turbo.login', login: username))
-        run_with_output("turbo login #{username} #{password} --format=json")
+      def login(config)
+        @machine.ui.info(I18n.t('vagrant_turbo.login', username: config.username))
+        run_with_output("turbo login #{config.username} #{config.password} --format=json")
       end
 
       def import(config)
