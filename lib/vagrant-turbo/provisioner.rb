@@ -28,14 +28,21 @@ module VagrantPlugins
         config.commands.each do |command|
           if command.is_a?(ImportConfig)
             import(command)
+            next
           end
 
           if command.is_a?(LoginConfig)
             login(command)
+            next
           end
 
           if command.is_a?(RunConfig)
             run(command)
+            next
+          end
+
+          if command.is_a?(TurboShellConfig)
+            shell(command)
           end
         end
       end
@@ -50,6 +57,22 @@ module VagrantPlugins
       def run(run_config)
         run_config.startup_file = build_startup_file(run_config)
         @client.run(run_config)
+      end
+
+      def import(import_config)
+        import_config.path = expand_guest_path(import_config.path)
+        @client.import(import_config)
+      end
+
+      def shell(shell_config)
+        with_script_file(shell_config) do |path|
+          machine.communicate.tap do |comm|
+            machine.ui.info(I18n.t('vagrant_turbo.running', script: shell_config.path || 'inline Turbo script'))
+            comm.upload(path, shell_config.script_dir)
+            shell_config.path = File.join(shell_config.script_dir, File.basename(path))
+            @client.shell(shell_config)
+          end
+        end
       end
 
       def build_startup_file(config)
@@ -117,25 +140,7 @@ module VagrantPlugins
         end
       end
 
-      def import(import_config)
-        import_config.path = expand_guest_path(import_config.path)
-        @client.import(import_config)
-      end
-
-      def execute_script
-        with_script_file do |path|
-          machine.communicate.tap do |comm|
-            machine.ui.info(I18n.t('vagrant_turbo.running', script: config.path || 'inline Turbo script'))
-            comm.upload(path, config.upload_path)
-            # TODO use path join
-            comm.sudo("tsh \"#{config.upload_path}\\#{File.basename(path)}\"") do |type, data|
-              handle_comm(type, data)
-            end
-          end
-        end
-      end
-
-      def with_script_file
+      def with_script_file(config)
         script = if config.path
                    # Read the content of the script
                    Pathname.new(config.path).expand_path(machine.env.root_path).read

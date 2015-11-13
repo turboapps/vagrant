@@ -2,6 +2,25 @@ require 'pathname'
 
 module VagrantPlugins
   module Turbo
+    class ConfigUtils
+      def self.validate_path(path, machine, errors)
+        errors << I18n.t('vagrant_turbo.invalid_type', param: 'path', type: 'String') unless path.is_a?(String)
+        expanded_path = Pathname.new(path).expand_path(machine.env.root_path)
+        if expanded_path.file?
+          data = expanded_path.read(16)
+          if data && !data.valid_encoding?
+            errors << I18n.t(
+                'vagrant_turbo.invalid_encoding',
+                actual: data.encoding.to_s,
+                default: Encoding.default_external.to_s,
+                path: expanded_path.to_s)
+          end
+        else
+          errors << I18n.t('vagrant_turbo.path_invalid', path: expanded_path)
+        end
+      end
+    end
+
     class Config < Vagrant.plugin('2', :config)
       def initialize
         super
@@ -35,6 +54,10 @@ module VagrantPlugins
 
       def run(_name, **_options, &block)
         _add_command(RunConfig.new, &block)
+      end
+
+      def shell(__name, **_options, &block)
+        _add_command(TurboShellConfig.new, &block)
       end
 
       private
@@ -148,22 +171,7 @@ module VagrantPlugins
         errors << I18n.t('vagrant_turbo.invalid_type', param: 'future', type: 'String') if future && !future.is_a?(String)
         errors << I18n.t('vagrant_turbo.invalid_type', param: 'startup_file', type: 'String') if startup_file && !startup_file.is_a?(String)
 
-        if path
-          errors << I18n.t('vagrant_turbo.invalid_type', param: 'path', type: 'String') unless path.is_a?(String)
-          expanded_path = Pathname.new(path).expand_path(machine.env.root_path)
-          if expanded_path.file?
-            data = expanded_path.read(16)
-            if data && !data.valid_encoding?
-              errors << I18n.t(
-                  'vagrant_turbo.invalid_encoding',
-                  actual: data.encoding.to_s,
-                  default: Encoding.default_external.to_s,
-                  path: expanded_path.to_s)
-            end
-          else
-            errors << I18n.t('vagrant_turbo.path_invalid', path: expanded_path)
-          end
-        end
+        ConfigUtils.validate_path(path, machine, errors) if path
 
         errors << I18n.t('vagrant_turbo.path_and_inline_set') if path && inline
         errors << I18n.t('vagrant_turbo.startup_file_with_path_or_inline') if startup_file && (path || inline)
@@ -180,6 +188,33 @@ module VagrantPlugins
         @powershell_args = nil if @powershell_args == UNSET_VALUE
         @future = nil if @future == UNSET_VALUE
         @startup_file = nil if @startup_file == UNSET_VALUE
+      end
+    end
+
+    class TurboShellConfig < Vagrant.plugin('2', :config)
+      attr_accessor :inline
+      attr_accessor :path
+      attr_accessor :script_dir
+
+      def initialize
+        @inline = UNSET_VALUE
+        @path = UNSET_VALUE
+        @script_dir = UNSET_VALUE
+      end
+
+      def validate(machine)
+        errors = _detected_errors
+        errors << I18n.t('vagrant_turbo.invalid_type', param: 'inline', type: 'String') if inline && !inline.is_a?(String)
+        ConfigUtils.validate_path(path, machine, errors) if path
+
+        errors << I18n.t('vagrant_turbo.path_and_inline_set') if path && inline
+        errors << I18n.t('vagrant_turbo.path_and_inline_set') if path && inline
+      end
+
+      def finalize!
+        @script_dir = 'C:\\tmp\\vagrant-turbo' if @script_dir == UNSET_VALUE
+        @path = nil if @path == UNSET_VALUE
+        @inline = nil if @inline == UNSET_VALUE
       end
     end
   end

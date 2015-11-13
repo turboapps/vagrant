@@ -45,6 +45,12 @@ module VagrantPlugins
         run_with_output(command)
       end
 
+      def shell(config)
+        @machine.communicate.execute("tsh \"#{config.path}\"") do |type, data|
+          handle_comm(type, data)
+        end
+      end
+
       private
 
       def run_with_output(command)
