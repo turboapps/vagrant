@@ -1,89 +1,220 @@
-require "pathname"
+require 'pathname'
 
 module VagrantPlugins
   module Turbo
-    class Config < Vagrant.plugin(2, :config)
-      attr_accessor :login
-      attr_accessor :password
-      attr_accessor :inline
-      attr_accessor :path
-      attr_accessor :install
-      attr_reader :images_folders
-      attr_reader :upload_path
+    class ConfigUtils
+      def self.validate_path(path, machine, errors)
+        errors << I18n.t('vagrant_turbo.invalid_type', param: 'path', type: 'String') unless path.is_a?(String)
+        expanded_path = Pathname.new(path).expand_path(machine.env.root_path)
+        if expanded_path.file?
+          data = expanded_path.read(16)
+          if data && !data.valid_encoding?
+            errors << I18n.t(
+                'vagrant_turbo.invalid_encoding',
+                actual: data.encoding.to_s,
+                default: Encoding.default_external.to_s,
+                path: expanded_path.to_s)
+          end
+        else
+          errors << I18n.t('vagrant_turbo.path_invalid', path: expanded_path)
+        end
+      end
+    end
 
+    class Config < Vagrant.plugin('2', :config)
       def initialize
         super
-        @login    = UNSET_VALUE
-        @password = UNSET_VALUE
-        @inline   = UNSET_VALUE
-        @path     = UNSET_VALUE
-        @install  = UNSET_VALUE
 
-        # Populated with 'images_folder' method
-        @images_folders = []
-
-        # Upload path of Turbo script
-        @upload_path = "C:\\tmp\\vagrant-turbo"
+        @commands = []
       end
 
       def finalize!
-        @login    = nil       if @login    == UNSET_VALUE
-        @password = nil       if @password == UNSET_VALUE
-        @inline   = nil       if @inline   == UNSET_VALUE
-        @path     = nil       if @path     == UNSET_VALUE
-        @install  = false     if @install  == UNSET_VALUE
+        commands.each { |c| c.finalize! }
       end
 
       def validate(machine)
         errors = _detected_errors
 
-        # Validate types of parameters
-        errors << I18n.t("vagrant_turbo.invalid_type", param: "login", type: "String") if \
-          login && !login.is_a?(String)
-        errors << I18n.t("vagrant_turbo.invalid_type", param: "password", type: "String") if \
-          password && !password.is_a?(String)
-        errors << I18n.t("vagrant_turbo.invalid_type", param: "inline", type: "String") if \
-          inline && !inline.is_a?(String)
-        errors << I18n.t("vagrant_turbo.invalid_type", param: "path", type: "String") if \
-          path && !path.is_a?(String)
-        errors << I18n.t("vagrant_turbo.invalid_type", param: "install", type: "Boolean") if \
-          !install.nil? && !!install != install
+        commands.each { |c| c.validate(machine) }
 
-        # Validate that the parameters are properly set
-        errors << I18n.t("vagrant_turbo.login_required") if !login || !password
-        errors << I18n.t("vagrant_turbo.path_and_inline_set") if path && inline
-        errors << I18n.t("vagrant_turbo.no_path_or_inline") if !path && !inline
-
-        # Validate the existence of a script to upload
-        if path
-          expanded_path = Pathname.new(path).expand_path(machine.env.root_path)
-          if !expanded_path.file?
-            errors << I18n.t("vagrant_turbo.path_invalid", path: expanded_path)
-          else
-            data = expanded_path.read(16)
-            if data && !data.valid_encoding?
-              errors << I18n.t(
-                "vagrant_turbo.invalid_encoding",
-                actual: data.encoding.to_s,
-                default: Encoding.default_external.to_s,
-                path: expanded_path.to_s)
-            end
-          end
-        end
-
-        # Validate images folders
-        images_folders.each do |local_path, remote_path, opts|
-          expanded_path = Pathname.new(local_path).expand_path(machine.env.root_path)
-          if !expanded_path.directory?
-            errors << I18n.t("vagrant_turbo.images_folder_invalid", path: expanded_path)
-          end
-        end
-
-        { "turbo provisioner" => errors }
+        {'turbo provisioner' => errors}
       end
 
-      def images_folder(local_path, remote_path, opts = {})
-        @images_folders << [local_path, remote_path, opts]
+      def commands
+        @commands
+      end
+
+      def login(_name, **_options, &block)
+        _add_command(LoginConfig.new, &block)
+      end
+
+      def import(_name, **_options, &block)
+        _add_command(ImportConfig.new, &block)
+      end
+
+      def run(_name, **_options, &block)
+        _add_command(RunConfig.new, &block)
+      end
+
+      def shell(__name, **_options, &block)
+        _add_command(TurboShellConfig.new, &block)
+      end
+
+      private
+
+      def _add_command(command, &block)
+        block.call(command)
+        @commands << command
+        nil
+      end
+    end
+
+    class LoginConfig < Vagrant.plugin('2', :config)
+      attr_accessor :username
+      attr_accessor :password
+
+      def initialize
+        @username = UNSET_VALUE
+        @password = UNSET_VALUE
+      end
+
+      def validate(_machine)
+        errors = _detected_errors
+
+        # Check login and password
+        if username && !username.is_a?(String)
+          I18n.t('vagrant_turbo.invalid_type', param: 'username', type: 'String')
+        end
+
+        if password && password.is_a?(String)
+          I18n.t('vagrant_turbo.invalid_type', param: 'password', type: 'String')
+        end
+
+        errors << I18n.t('vagrant_turbo.login_required') if !username || !password
+      end
+
+      def finalize!
+      end
+    end
+
+    class ImportConfig < Vagrant.plugin('2', :config)
+      attr_accessor :name
+      attr_accessor :path
+      attr_accessor :type
+      attr_accessor :overwrite
+
+      def initialize
+        super
+        @path = UNSET_VALUE
+        @name = UNSET_VALUE
+        @type = UNSET_VALUE
+        @overwrite = UNSET_VALUE
+      end
+
+      def validate(_machine)
+      end
+
+      def finalize!
+        @name = nil if @name == UNSET_VALUE
+        @type = 'SVM' if @type == UNSET_VALUE
+        @overwrite = true if @overwrite == UNSET_VALUE
+      end
+    end
+
+    class RunConfig < Vagrant.plugin('2', :config)
+      attr_accessor :inline
+      attr_accessor :path
+      attr_accessor :script_dir
+      attr_accessor :powershell_args
+
+      attr_accessor :name
+      attr_accessor :images
+      attr_accessor :using
+      attr_accessor :isolate
+      attr_accessor :future
+      attr_accessor :startup_file
+
+      def initialize
+        @name = UNSET_VALUE
+        @images = UNSET_VALUE
+        @using = UNSET_VALUE
+        @isolate = UNSET_VALUE
+        @inline = UNSET_VALUE
+        @path = UNSET_VALUE
+        @script_dir = UNSET_VALUE
+        @powershell_args = UNSET_VALUE
+        @future = UNSET_VALUE
+        @startup_file = UNSET_VALUE
+      end
+
+      def validate(machine)
+        errors = _detected_errors
+
+        # Check run parameters
+        if isolate
+          if !isolate.is_a?(String)
+            errors << I18n.t('vagrant_turbo.invalid_type', param: 'isolate', type: 'String')
+          elsif !%w(full write-copy merge).include?(isolate.downcase)
+            errors << I18n.t('vagrant_turbo.invalid_parameter', param: 'isolate', values: 'full, write-copy, merge')
+          end
+        end
+
+        if images and !images.is_a?(Array)
+          errors << I18n.t('vagrant_turbo.invalid_type', param: 'images', type: 'Array')
+        end
+
+        errors << I18n.t('vagrant_turbo.invalid_type', param: 'using', type: 'Array') if using && !using.is_a?(Array)
+        errors << I18n.t('vagrant_turbo.invalid_type', param: 'inline', type: 'String') if inline && !inline.is_a?(String)
+        errors << I18n.t('vagrant_turbo.invalid_type', param: 'powershell_args', type: 'String') if powershell_args && !powershell_args.is_a?(String)
+        errors << I18n.t('vagrant_turbo.invalid_type', param: 'name', type: 'String') if name && !name.is_a?(String)
+        errors << I18n.t('vagrant_turbo.invalid_type', param: 'script_dir', type: 'String') if script_dir && !script_dir.is_a?(String)
+        errors << I18n.t('vagrant_turbo.invalid_type', param: 'future', type: 'String') if future && !future.is_a?(String)
+        errors << I18n.t('vagrant_turbo.invalid_type', param: 'startup_file', type: 'String') if startup_file && !startup_file.is_a?(String)
+
+        ConfigUtils.validate_path(path, machine, errors) if path
+
+        errors << I18n.t('vagrant_turbo.path_and_inline_set') if path && inline
+        errors << I18n.t('vagrant_turbo.startup_file_with_path_or_inline') if startup_file && (path || inline)
+      end
+
+      def finalize!
+        @name = nil if @name == UNSET_VALUE
+        @images = [] if @images == UNSET_VALUE
+        @using = [] if @using == UNSET_VALUE
+        @isolate = nil if @isolate == UNSET_VALUE
+        @inline = nil if @inline == UNSET_VALUE
+        @path = nil if @path == UNSET_VALUE
+        @script_dir = 'C:\\tmp\\vagrant-turbo' if @script_dir == UNSET_VALUE
+        @powershell_args = nil if @powershell_args == UNSET_VALUE
+        @future = nil if @future == UNSET_VALUE
+        @startup_file = nil if @startup_file == UNSET_VALUE
+      end
+    end
+
+    class TurboShellConfig < Vagrant.plugin('2', :config)
+      attr_accessor :inline
+      attr_accessor :path
+      attr_accessor :script_dir
+
+      def initialize
+        @inline = UNSET_VALUE
+        @path = UNSET_VALUE
+        @script_dir = UNSET_VALUE
+      end
+
+      def validate(machine)
+        errors = _detected_errors
+        errors << I18n.t('vagrant_turbo.invalid_type', param: 'inline', type: 'String') if inline && !inline.is_a?(String)
+        ConfigUtils.validate_path(path, machine, errors) if path
+
+        errors << I18n.t('vagrant_turbo.path_and_inline_set') if path && inline
+        errors << I18n.t('vagrant_turbo.path_and_inline_set') if path && inline
+      end
+
+      def finalize!
+        @script_dir = 'C:\\tmp\\vagrant-turbo' if @script_dir == UNSET_VALUE
+        @path = nil if @path == UNSET_VALUE
+        @inline = nil if @inline == UNSET_VALUE
       end
     end
   end
