@@ -36,7 +36,6 @@ module VagrantPlugins
         command << ' ' << config.future if config.future
 
         startup_file = config.startup_file
-        startup_file.gsub!('/', '\\')
         startup_file = "c:#{startup_file}" if startup_file.start_with?("\\")
         command << " --startup-file=\"#{startup_file}\""
 

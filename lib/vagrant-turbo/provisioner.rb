@@ -34,8 +34,8 @@ module VagrantPlugins
             login(command)
           end
 
-          if config.run?
-            run!(config)
+          if command.is_a?(RunConfig)
+            run(command)
           end
         end
       end
@@ -47,10 +47,9 @@ module VagrantPlugins
         @client.login(login_config)
       end
 
-      def run!(config)
-        config.startup_file = build_startup_file(config)
-
-        @client.run(config)
+      def run(run_config)
+        run_config.startup_file = build_startup_file(run_config)
+        @client.run(run_config)
       end
 
       def build_startup_file(config)
@@ -83,7 +82,7 @@ module VagrantPlugins
               return File.join(dir_to_use, File.basename(config.path))
             end
           else
-            upload_startup_file(comm, dir_to_use, config.inline)
+            return upload_startup_file(comm, dir_to_use, config.inline)
           end
         end
       end
