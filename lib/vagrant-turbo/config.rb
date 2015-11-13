@@ -18,9 +18,6 @@ module VagrantPlugins
       attr_accessor :future
       attr_accessor :startup_file
 
-      attr_reader :images_folders
-      attr_reader :upload_path
-
       def initialize
         super
         @login = UNSET_VALUE
@@ -37,11 +34,7 @@ module VagrantPlugins
         @future = UNSET_VALUE
         @startup_file = UNSET_VALUE
 
-        # Populated with 'images_folder' method
-        @images_folders = []
-
-        # Upload path of Turbo script
-        @upload_path = "C:\\tmp\\vagrant-turbo"
+        @commands = []
       end
 
       def finalize!
@@ -58,6 +51,8 @@ module VagrantPlugins
         @powershell_args = nil if @powershell_args == UNSET_VALUE
         @future = nil if @future == UNSET_VALUE
         @startup_file = nil if @startup_file == UNSET_VALUE
+
+        commands.each { |c| c.finalize! }
       end
 
       def validate(machine)
@@ -87,8 +82,6 @@ module VagrantPlugins
 
         if images and !images.is_a?(Array)
           errors << I18n.t('vagrant_turbo.invalid_type', param: 'images', type: 'Array')
-        elsif images.empty?
-          errors << I18n.t('vagrant_turbo.no_images_to_run')
         end
 
         errors << I18n.t('vagrant_turbo.invalid_type', param: 'using', type: 'Array') if using && !using.is_a?(Array)
@@ -119,19 +112,48 @@ module VagrantPlugins
         errors << I18n.t('vagrant_turbo.path_and_inline_set') if path && inline
         errors << I18n.t('vagrant_turbo.startup_file_with_path_or_inline') if startup_file && (path || inline)
 
-        # Validate images folders
-        images_folders.each do |local_path, remote_path, opts|
-          expanded_path = Pathname.new(local_path).expand_path(machine.env.root_path)
-          unless expanded_path.directory?
-            errors << I18n.t('vagrant_turbo.images_folder_invalid', path: expanded_path)
-          end
-        end
+        commands.each { |c| c.validate(machine) }
 
         {'turbo provisioner' => errors}
       end
 
-      def images_folder(local_path, remote_path, opts = {})
-        @images_folders << [local_path, remote_path, opts]
+      def commands
+        @commands
+      end
+
+      def import(_name, **_options, &block)
+        command = ImportConfig.new
+        block.call(command)
+        @commands << command
+        nil
+      end
+
+      def run?
+        images.any?
+      end
+    end
+
+    class ImportConfig < Vagrant.plugin('2', :config)
+      attr_accessor :name
+      attr_accessor :path
+      attr_accessor :type
+      attr_accessor :overwrite
+
+      def initialize
+        super
+        @path = UNSET_VALUE
+        @name = UNSET_VALUE
+        @type = UNSET_VALUE
+        @overwrite = UNSET_VALUE
+      end
+
+      def validate(_machine)
+      end
+
+      def finalize!
+        @name = nil if @name == UNSET_VALUE
+        @type = 'SVM' if @type == UNSET_VALUE
+        @overwrite = true if @overwrite == UNSET_VALUE
       end
     end
   end

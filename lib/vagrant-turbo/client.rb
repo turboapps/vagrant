@@ -7,12 +7,18 @@ module VagrantPlugins
       end
 
       def login(username, password)
-        @machine.ui.detail(I18n.t('vagrant_turbo.login', login: username))
+        @machine.ui.info(I18n.t('vagrant_turbo.login', login: username))
         run_with_output("turbo login #{username} #{password} --format=json")
       end
 
-      def import(svm_path)
-        run_with_output("turbo import svm \"#{svm_path}\" --overwrite")
+      def import(config)
+        @machine.ui.info(I18n.t('vagrant_turbo.import_image', path: config.path))
+
+        command = "turbo import #{config.type}"
+        command << " --name=#{config.name}" if config.name
+        command << ' --overwrite' if config.overwrite
+        command << ' ' << config.path
+        run_with_output(command)
       end
 
       def run(config)
