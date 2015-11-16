@@ -24,22 +24,54 @@ module VagrantPlugins
       def run(config)
         command = 'turbo run'
 
-        # HACK - list of images must be passed in quotes. Otherwise Vagrant will split command into two.
+        command << " --name=#{config.name}" if config.name
+        command << ' --temp' if config.temp
+        # HACK - list of images must be passed in quotes. Otherwise Vagrant will split the command.
         command << ' ' << "\"#{config.images.join(',')}\""
         command << " --using=\"#{config.using.join(',')}\"" if config.using.any?
-        command << " --name=#{config.name}" if config.name
+        command << " --isolate=#{config.isolate}" if config.isolate
         command << " --mount \"#{config.script_dir}\"=\"#{config.script_dir}\"" if config.script_dir
 
-        # TODO check if detach or enable sync are passed in future
-        command << ' --attach' if config.future !~ /attach/i
-        command << ' --disable-sync' if config.future !~ /disable-sync/i
-        command << ' ' << config.future if config.future
+        if config.startup_file
+          startup_file = config.startup_file
+          startup_file = "c:#{startup_file}" if startup_file.start_with?("\\")
+          command << " --startup-file=\"#{startup_file}\""
+        end
 
-        startup_file = config.startup_file
-        startup_file = "c:#{startup_file}" if startup_file.start_with?("\\")
-        command << " --startup-file=\"#{startup_file}\""
+        command << ' --pull' if config.pull
+        command << ' --no-stream' if config.no_stream
+        command << ' --admin' if config.admin
 
-        @logger.debug('Executing command: ' + command)
+        command << " --trigger=\"#{config.trigger}\"" if config.trigger
+        command << " --vm=#{config.vm}" if config.vm
+        command << " --with-root=\"#{with_root}\"" if config.with_root
+
+        command << ' --attach' if config.attach
+        command << ' --detach' if config.detach
+        command << " --format=#{config.format}" if config.format
+        command << ' --diagnostic' if config.diagnostic
+
+        command << flat_with_prefix('--enable=', config.enable) if config.enable
+        command << flat_with_prefix('--disable=', config.disable) if config.disable
+        command << ' --disable-sync' if config.disable_sync
+        command << flat_with_prefix('--env=', config.env) if config.env
+        command << " --env-file=\"#{config.env_file}\"" if config.env_file
+
+        command << ' --private' if config.private
+        command << ' --public' if config.public
+        command << ' --enable-log-stream' if config.enable_log_stream
+        command << ' --enable-screencast' if config.enable_screencast
+        command << ' --enable-sync' if config.enable_sync
+
+        command << flat_with_prefix('--mount=', config.mount) if config.mount
+        command << ' --install' if config.install
+
+        command << " --network=#{config.network}" if config.network
+        command << flat_with_prefix('--hosts=', config.hosts) if config.hosts
+        command << flat_with_prefix('--link=', config.link) if config.link
+        command << flat_with_prefix('--route-add=', config.route_add) if config.route_add
+        command << flat_with_prefix('--route-block=', config.route_block) if config.route_block
+
         @machine.ui.info('Executing command: ' + command)
 
         run_with_output(command)
@@ -52,6 +84,11 @@ module VagrantPlugins
       end
 
       private
+
+      def flat_with_prefix(prefix, array)
+        args_with_prefix = array.map { |value| prefix + value }
+        ' ' << args_with_prefix.join(' ')
+      end
 
       def run_with_output(command)
         @machine.communicate.execute(command) do |type, data|
