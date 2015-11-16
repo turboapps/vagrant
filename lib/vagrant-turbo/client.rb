@@ -18,7 +18,7 @@ module VagrantPlugins
         command << ' --overwrite' if config.overwrite
         command << ' ' << config.path
 
-        @machine.ui.info('Executing command: ' + command)
+        @machine.ui.info(I18n.t('vagrant_turbo.execute_command', command: command))
         run_with_output(command)
       end
 
@@ -72,7 +72,7 @@ module VagrantPlugins
         command << flat_with_prefix('--route-add=', config.route_add) if config.route_add
         command << flat_with_prefix('--route-block=', config.route_block) if config.route_block
 
-        @machine.ui.info('Executing command: ' + command)
+        @machine.ui.info(I18n.t('vagrant_turbo.execute_command', command: command))
         run_with_output(command)
       end
 

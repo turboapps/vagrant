@@ -23,6 +23,16 @@ module VagrantPlugins
         Cap::Windows::TurboInstall
       end
 
+      guest_capability(:windows, :winrm_get_quota) do
+        require_relative 'cap/windows/winrm_get_quota'
+        Cap::Windows::WinrmGetQuota
+      end
+
+      guest_capability(:windows, :winrm_set_quota) do
+        require_relative 'cap/windows/winrm_set_quota'
+        Cap::Windows::WinrmSetQuota
+      end
+
       provisioner(:turbo) do
         require_relative 'provisioner'
         Provisioner

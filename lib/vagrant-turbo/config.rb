@@ -22,21 +22,34 @@ module VagrantPlugins
     end
 
     class Config < Vagrant.plugin('2', :config)
+      attr_accessor :max_memory_per_shell
+
       def initialize
         super
 
+        @max_memory_per_shell = UNSET_VALUE
         @__command_names = []
         @__commands = {}
       end
 
       def finalize!
+        @max_memory_per_shell = nil if @max_memory_per_shell == UNSET_VALUE
+
         commands.each { |c| c.finalize! }
       end
 
       def validate(machine)
         errors = _detected_errors
 
-        commands.each { |c| c.validate(machine) }
+        errors << I18n.t('vagrant_turbo.invalid_type', param: 'max_memory_per_shell', type: 'Integer') if max_memory_per_shell && !max_memory_per_shell.is_a?(Integer)
+
+        commands.each do |command|
+          command.validate(machine).each do |key, local_errors|
+            local_errors.select { |msg| msg != nil }.each do |msg|
+              errors << "#{key} => #{msg}"
+            end
+          end
+        end
 
         {'turbo provisioner' => errors}
       end
@@ -99,9 +112,13 @@ module VagrantPlugins
         end
 
         errors << I18n.t('vagrant_turbo.login_required') if !username || !password
+
+        {'turbo login' => errors}
       end
 
       def finalize!
+        @username = nil if @username == UNSET_VALUE
+        @password = nil if @password == UNSET_VALUE
       end
     end
 
@@ -208,6 +225,7 @@ module VagrantPlugins
         @private = UNSET_VALUE
         @public = UNSET_VALUE
         @enable_log_stream = UNSET_VALUE
+        @enable_screencast = UNSET_VALUE
         @enable_sync = UNSET_VALUE
         @disable_sync = UNSET_VALUE
 
@@ -279,6 +297,8 @@ module VagrantPlugins
         errors << require_array('route_block', route_block)
 
         errors << I18n.t('vagrant_turbo.startup_file_with_path_or_inline') if startup_file && (path || inline)
+
+        {'turbo run' => errors}
       end
 
       def finalize!
@@ -361,6 +381,8 @@ module VagrantPlugins
 
         errors << I18n.t('vagrant_turbo.path_and_inline_set') if path && inline
         errors << I18n.t('vagrant_turbo.path_and_inline_set') if path && inline
+
+        {'turbo shell' => errors}
       end
 
       def finalize!

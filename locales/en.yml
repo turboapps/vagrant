@@ -1,7 +1,7 @@
 en:
   vagrant_turbo:
     invalid_type: "Invalid value of `%{param}`. It must be of type %{type}."
-    login_required: "Turbo.net login credentials must be specified via `login` and `password`."
+    login_required: "Turbo.net login credentials must be specified via `username` and `password`."
     no_path_or_inline: "One of `path` or `inline` must be set."
     path_and_inline_set: "Only one of `path` or `inline` may be set."
     path_invalid: "`path` for Turbo provisioner does not exist on the host system: %{path}"
@@ -10,9 +10,10 @@ en:
       Invalid encoding '%{actual}' for script at '%{path}'.
       Must be '%{default}' or UTF-8.
 
-    check_install: "Checking for Turbo installation..."
+    check_install: "Checking Turbo installation..."
     already_installed: "Turbo is installed on this machine. Skipping installation..."
     not_installed: "Turbo is not installed on this machine. Installing..."
+    install_failed: "Turbo installation failed. Something went terribly wrong. Login to the guest machine and install it manually."
 
     no_images_to_run: "No images specified to run in the container"
 
@@ -23,3 +24,10 @@ en:
     running: "Running %{script}..."
     invalid_parameter: "Unknown `%{param}` value. Use one of valid values: %{values}"
     startup_file_with_path_or_inline: "Startup file cannot be set if path or inline are used"
+    check_quota: "Checking %{quota_name} quota"
+    quota_protected_by_group_policy_increase_info: "Quota is protected by Group Policy and must be changed manually. For more information visit https://msdn.microsoft.com/en-us/library/windows/desktop/ee309367(v=vs.85).aspx"
+    small_quota_warning: "Small quota may cause provisioning failure with`System.OutOfMemoryException` or `System.StackOverflowException`"
+    quota_below_recommended_limit: "%{quota_name} is below the recommended threshold of %{recommended_limit}MB (current value: %{quota_limit}MB)."
+    quota_increase_info: "To increase the quota set a new value using 'max_memory_per_shell' key in turbo provisioner or execute the following command on guest machine:\n\nwinrm set winrm/config/winrs @{%{quota_name}=\"%{recommended_limit}\"}"
+    quota_set_to: "Quota %{quota_name} set to %{quota_limit}"
+    execute_command: "Executing command: %{command}"

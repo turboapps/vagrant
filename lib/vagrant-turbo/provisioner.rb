@@ -8,7 +8,7 @@ require_relative 'config'
 module VagrantPlugins
   module Turbo
     class TurboError < Vagrant::Errors::VagrantError
-      error_namespace('vagrant.provisioners.turbo')
+      error_namespace('vagrant_turbo')
     end
 
     class Provisioner < Vagrant.plugin(2, :provisioner)
@@ -17,10 +17,11 @@ module VagrantPlugins
 
         @client = client || Client.new(machine)
         @installer = installer || Installer.new(machine)
+        @logger = Log4r::Logger.new('vagrant::provisioners::turbo')
       end
 
       def provision
-        @logger = Log4r::Logger.new('vagrant::provisioners::turbo')
+        setup_max_memory_per_shell
 
         @logger.info('Ensure turbo installed')
         @installer.ensure_installed
@@ -48,6 +49,35 @@ module VagrantPlugins
       end
 
       private
+
+      def setup_max_memory_per_shell
+        quota_name = 'MaxMemoryPerShellMB'
+        recommended_limit = 1024
+
+        machine.ui.info(I18n.t('vagrant_turbo.check_quota', quota_name: quota_name))
+        quota = machine.guest.capability(:winrm_get_quota, quota_name)
+        if quota
+          @logger.info("#{quota_name} was initially set to #{quota.limit}")
+
+          if config.max_memory_per_shell
+            if quota.is_group_policy && quota.limit != config.max_memory_per_shell
+              raise TurboError, :quota_protected_by_group_policy_increase_info
+            end
+            machine.guest.capability(:winrm_set_quota, quota_name, config.max_memory_per_shell)
+            machine.ui.info(I18n.t('vagrant_turbo.quota_set_to', quota_name: quota_name, quota_limit: config.max_memory_per_shell))
+          elsif quota.limit < recommended_limit
+            machine.ui.warn(I18n.t('vagrant_turbo.quota_below_recommended_limit', quota_name: quota_name, quota_limit: quota.limit, recommended_limit: recommended_limit))
+            if quota.is_group_policy
+              machine.ui.warn(I18n.t('vagrant_turbo.quota_protected_by_group_policy_increase_info'))
+            else
+              machine.ui.warn(I18n.t('vagrant_turbo.quota_increase_info', quota_name: quota_name, recommended_limit: recommended_limit))
+            end
+            machine.ui.warn(I18n.t('vagrant_turbo.small_quota_warning'))
+          end
+        else
+          @logger.info("Failed to get #{quota_name} quota limit")
+        end
+      end
 
       def login (login_config)
         @logger.info('Login to the hub')

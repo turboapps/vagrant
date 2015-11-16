@@ -6,10 +6,10 @@ module VagrantPlugins
       end
 
       def ensure_installed
-        @machine.ui.detail(I18n.t('vagrant_turbo.check_install'))
+        @machine.ui.info(I18n.t('vagrant_turbo.check_install'))
 
         unless @machine.guest.capability(:turbo_installed)
-          @machine.ui.detail(I18n.t('vagrant_turbo.not_installed'))
+          @machine.ui.info(I18n.t('vagrant_turbo.not_installed'))
           @machine.guest.capability(:turbo_install)
 
           unless @machine.guest.capability(:turbo_installed)
