@@ -25,7 +25,8 @@ module VagrantPlugins
       def initialize
         super
 
-        @commands = []
+        @__command_names = []
+        @__commands = {}
       end
 
       def finalize!
@@ -41,30 +42,37 @@ module VagrantPlugins
       end
 
       def commands
-        @commands
+        @__command_names.map {|name| @__commands[name] }
       end
 
-      def login(_name, **_options, &block)
-        _add_command(LoginConfig.new, &block)
+      def login(name, **options, &block)
+        _add_command(name, LoginConfig.new, **options, &block)
       end
 
-      def import(_name, **_options, &block)
-        _add_command(ImportConfig.new, &block)
+      def import(name, **options, &block)
+        _add_command(name, ImportConfig, **options, &block)
       end
 
-      def run(_name, **_options, &block)
-        _add_command(RunConfig.new, &block)
+      def run(name, **options, &block)
+        _add_command(name, RunConfig, **options, &block)
       end
 
-      def shell(__name, **_options, &block)
-        _add_command(TurboShellConfig.new, &block)
+      def shell(name, **options, &block)
+        _add_command(name, TurboShellConfig, **options, &block)
       end
 
       private
 
-      def _add_command(command, &block)
-        block.call(command)
-        @commands << command
+      def _add_command(name, default, **_options, &block)
+        name_to_use = name || "__default_#{type.name}"
+        command = @__commands[name_to_use]
+        unless command
+          command = default
+          @__commands[name_to_use] = command
+          @__command_names << name_to_use
+        end
+
+        block.call(command) if block_given?
         nil
       end
     end
