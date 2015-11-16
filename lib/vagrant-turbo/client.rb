@@ -13,17 +13,17 @@ module VagrantPlugins
 
       def import(config)
         @machine.ui.info(I18n.t('vagrant_turbo.import_image', path: config.path))
-
         command = "turbo import #{config.type}"
         command << " --name=#{config.name}" if config.name
         command << ' --overwrite' if config.overwrite
         command << ' ' << config.path
+
+        @machine.ui.info('Executing command: ' + command)
         run_with_output(command)
       end
 
       def run(config)
         command = 'turbo run'
-
         command << " --name=#{config.name}" if config.name
         command << ' --temp' if config.temp
         # HACK - list of images must be passed in quotes. Otherwise Vagrant will split the command.
@@ -73,13 +73,14 @@ module VagrantPlugins
         command << flat_with_prefix('--route-block=', config.route_block) if config.route_block
 
         @machine.ui.info('Executing command: ' + command)
-
         run_with_output(command)
       end
 
       def shell(config)
-        @machine.communicate.execute("tsh \"#{config.path}\"") do |type, data|
-          handle_comm(type, data)
+        with_pretty_print do |output|
+          @machine.communicate.execute("tsh \"#{config.path}\"") do |type, data|
+            output.append(type, data)
+          end
         end
       end
 
@@ -91,22 +92,62 @@ module VagrantPlugins
       end
 
       def run_with_output(command)
-        @machine.communicate.execute(command) do |type, data|
-          handle_comm(type, data)
+        with_pretty_print do |output|
+          @machine.communicate.execute(command) do |type, data|
+            output.append(type, data)
+          end
         end
       end
 
-      # This handles outputting the communication data back to the UI
-      def handle_comm(type, data)
+      def log_communication(type, data)
         if [:stderr, :stdout].include?(type)
-          # Clear out the newline since we add one
-          data = data.chomp
-          return if data.empty?
+          @logger.info(data)
+        end
+      end
 
-          options = {}
-          #options[:color] = color if !config.keep_color
+      def with_pretty_print
+        pretty_print = PrettyPrint.new(@machine, @logger)
+        yield pretty_print
+        pretty_print.flush
+      end
+    end
 
-          @machine.ui.info(data.chomp, options)
+    class PrettyPrint
+      def initialize(machine, logger)
+        @machine = machine
+        @logger = logger
+        @buffer = []
+      end
+
+      def append(type, output)
+        unless [:stderr, :stdout].include?(type)
+          return
+        end
+
+        @logger.info(output)
+
+        # Clear out the newline since we add one
+        line = output.chomp
+        return if line.empty?
+
+        # Remove progress marquee
+        return if '-\|/'.include?(line)
+
+        if line.length > 1
+          if @buffer
+            prefix = @buffer.join('')
+            line = prefix << line
+            @buffer.clear
+          end
+          @machine.ui.info(line)
+        else
+          @buffer << line
+        end
+      end
+
+      def flush
+        if @buffer
+          @machine.ui.info(@buffer.join(''))
         end
       end
     end
