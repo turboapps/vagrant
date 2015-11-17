@@ -2,11 +2,11 @@
 Enable Vagrant to manage Turbo containers.
 
 The plugin supports a subset of features available in Turbo Console and Turbo Shell which are reasonable in provisioning a virtual machine:
-* Install the latest version of Turbo Plugin
-* Login to Turbo Hub
-* Run Turbo container
-* Import application image from local file system
-* Build application image using Turbo Shell
+* Install the latest version of the Turbo Plugin
+* Login to the Turbo Hub
+* Run a Turbo container
+* Import an image from the local file system on guest machine
+* Build an image using Turbo Shell
 * Manage quota for remote shells
 
 Remaining sections will explain how to install vagrant-turbo plugin on a host machine, configure the provisioner and setup development environment.
@@ -26,9 +26,37 @@ Installing the 'vagrant-turbo' plugin. This can take a few minutes...
 Installed the plugin 'vagrant-turbo (0.0.1.pre)'!
 ```
 
+### Known issues
+* Vagrant could not detect VirtualBox! - VirtualBox installer didn't add `C:\Program Files\Oracle\VirtualBox` to the system PATH environment variable, fix it manually.
+
 ## Configuration
 
-TODO: Write usage instructions here
+All code listings presented in this document are modifications of `turbo` block from the Vagrantfile provided below.
+The beginning and end of the file remain the same and were removed from code listings for better readability.
+
+To get a complete Vagrantfile paste the code snippet into `turbo` block.
+In the example below `turbo` block contains only a comment `TODO: Configure Vagrant Turbo Provisioner`.
+
+```
+VAGRANTFILE_API_VERSION = "2"
+BASE_BOX = "opentable/win-2012r2-standard-amd64-nocm"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.provider :virtualbox do |v|
+    v.gui = true
+	v.memory = 4096
+  end
+  config.vm.box = BASE_BOX
+  config.vm.communicator = :winrm
+  config.vm.guest = :windows
+  config.vm.synced_folder "./shared", "/shared"
+  config.vm.network :forwarded_port, host: 33389, guest: 3389, id: "rdp", auto_correct: true
+
+  config.vm.provision :turbo do |turbo|
+    # TODO: Configure Vagrant Turbo Provisioner
+  end
+end
+```
 
 ## Development
 
