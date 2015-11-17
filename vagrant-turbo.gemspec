@@ -5,12 +5,12 @@ require 'vagrant-turbo/version'
 Gem::Specification.new do |s|
   s.name          = 'vagrant-turbo'
   s.version       = VagrantPlugins::Turbo::VERSION
-  s.platform      = Gem::Platform::RUBY
-  s.authors       = ['Michael Kalygin']
-  s.email         = ['mkalygin@turbo.net']
-  s.summary       = %q{"Write a short summary, because Rubygems requires one."}
-  s.description   = %q{"Write a longer description or delete this line."}
-  s.homepage      = "TODO: Put your gem's website or public repo URL here."
+  s.platform      = Gem::Platform::CURRENT
+  s.authors       = 'Turbo.net'
+  s.email         = 'support@turbo.net'
+  s.summary       = 'Enables Vagrant to manage Turbo containers'
+  s.description   = 'Enables Vagrant to manage Turbo containers'
+  s.homepage      = 'https://github.com/turboapps/vagrant'
   s.license       = 'MIT'
 
   s.files         = `git ls-files`.split("\n")
