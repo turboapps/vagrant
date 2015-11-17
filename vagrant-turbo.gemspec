@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.summary       = 'Enables Vagrant to manage Turbo containers'
   s.description   = 'Enables Vagrant to manage Turbo containers'
   s.homepage      = 'https://github.com/turboapps/vagrant'
-  s.license       = 'MIT'
+  s.license       = 'Apache License, Version 2.0'
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
