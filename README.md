@@ -69,6 +69,61 @@ turbo.login :b do |b|
 end
 ```
 
+### Run a Turbo container
+Provisioner will run a container according to configuration defined in run block.
+Vagrantfile must be compliant with Ruby language syntax, so original `turbo run` parameters were renamed according to rules below:
+* quote paramter values
+* use lists `[]` to provide multiple values
+* assign `true` to no argument switches
+* strip prefix `--`
+* replace hyphen `-` by underscore `_`
+* don't use aliases
+
+```
+turbo.run :r do |r|
+	r.images = ["clean"]
+	r.using = ["chocolatey/chocolatey","microsoft/powershell"]
+	r.name = "chocolatey-pre"
+	r.disable_sync = true
+	r.attach = true
+	r.inline = "choco install chocolatey -pre -yes"
+end
+```
+
+`turbo run` parameters were explained in the [reference document](https://turbo.net/docs/reference#run).
+
+Vagrant extension offers extra arguments which simplify execution of bat and PowerShell scripts inside a container.
+
+To execute a single statement in the container console pass it using `inline` argument.
+
+```
+turbo.run :r do |r|
+	r.images = ["clean"]
+    r.temp = true
+	r.disable_sync = true
+	r.attach = true
+	r.inline = "ECHO Turbo.net"
+end
+```
+
+To execute a bat or PowerShell script set `path` to the script file on host machine. To run PowerShell scripts the interpreter must be available inside the container. If PowerShell is not available by default add `microsoft/powershell` to the list of images or temporary dependencies.
+
+`powershell_args` can be used to pass extra parameters to PowerShell interpreter. Provisioner by default adds `-ExecutionPolicy Bypass` and `-OutputFormat Text` unless other values were set in `powershell_args` for these parameters.
+
+```
+turbo.run :r do |r|
+	r.images = ["clean"]
+	r.using = ["microsoft/powershell"]
+    r.temp = true
+	r.disable_sync = true
+	r.attach = true
+	r.path = "C:\\sources\\script.ps1"
+	r.powershell_args = "-OutputFormat XML"
+end
+```
+
+Using `path`, `inline`, `startup_file` parameters together in one run block is currently not supported.
+
 ### Manage quota for remote shells
 Vagrant executes provisioning using Windows Remote Management (WinRM).
 This environment is restricted by a set of quotas including maximum amount of memory allocated per shell.

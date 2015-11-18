@@ -24,7 +24,7 @@ en:
     running: "Running %{script}..."
     invalid_parameter: "Unknown `%{param}` value. Use one of valid values: %{values}"
     startup_file_with_path_or_inline: "Startup file cannot be set if path or inline are used"
-    check_quota: "Checking %{quota_name} quota"
+    check_quota: "Checking %{quota_name} quota..."
     quota_protected_by_group_policy_increase_info: "Quota is protected by Group Policy and must be changed manually. For more information visit https://msdn.microsoft.com/en-us/library/windows/desktop/ee309367(v=vs.85).aspx"
     small_quota_warning: "Small quota may cause provisioning failure with`System.OutOfMemoryException` or `System.StackOverflowException`"
     quota_below_recommended_limit: "%{quota_name} is below the recommended threshold of %{recommended_limit}MB (current value: %{quota_limit}MB)."
