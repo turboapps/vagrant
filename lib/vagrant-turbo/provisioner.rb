@@ -48,6 +48,10 @@ module VagrantPlugins
         end
       end
 
+      def cleanup
+        # method is called by vagrant destroy
+      end
+
       private
 
       def setup_max_memory_per_shell
