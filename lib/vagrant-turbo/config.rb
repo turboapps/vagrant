@@ -137,6 +137,7 @@ module VagrantPlugins
       end
 
       def validate(_machine)
+        {'turbo import' => []}
       end
 
       def finalize!
