@@ -15,11 +15,10 @@ Remaining sections will explain how to install vagrant-turbo plugin on a host ma
 * Install [Vagrant](vagrantup.com/downloads)
 * Install [Virtual Box](https://www.virtualbox.org/)
 
-The article was written using Vagrant 1.7.4 and Virtual Box 4.3.34. At that time Vagrant didn't officially support Virtual Box 5.0.
+> Author used Vagrant 1.7.4 and Virtual Box 4.3.34. At that time Vagrant didn't officially support Virtual Box 5.0.
 
 * Run **vagrant plugin install vagrant-turbo** in command prompt to install the plugin.
 
-Expected output
 ```
 > vagrant plugin install vagrant-turbo
 Installing the 'vagrant-turbo' plugin. This can take a few minutes...
@@ -27,7 +26,7 @@ Installed the plugin 'vagrant-turbo (0.0.1.pre)'!
 ```
 
 ### Known issues
-* Vagrant could not detect VirtualBox! - VirtualBox installer didn't add `C:\Program Files\Oracle\VirtualBox` to the system PATH environment variable, fix it manually.
+* `Vagrant could not detect VirtualBox!` - VirtualBox installer didn't add `C:\Program Files\Oracle\VirtualBox` to the system PATH environment variable, fix it manually.
 
 ## Configuration
 
@@ -49,7 +48,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = BASE_BOX
   config.vm.communicator = :winrm
   config.vm.guest = :windows
-  config.vm.synced_folder "./shared", "/shared"
   config.vm.network :forwarded_port, host: 33389, guest: 3389, id: "rdp", auto_correct: true
 
   config.vm.provision :turbo do |turbo|
@@ -57,6 +55,31 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 end
 ```
+
+### Install the latest version of Turbo Plugin
+Turbo provisioner always checks whether turbo is installed on guest machine and installs the latest Turbo Plugin release if the tool was not found.
+
+### Login
+Operations on containers require login to the Turbo Hub. Provisioner will perform this task if username and password are defined in the login block.
+
+```
+turbo.login :b do |b|
+    b.username = "username"
+    b.password = "password"
+end
+```
+
+### Manage quota for remote shells
+Vagrant executes provisioning using Windows Remote Management (WinRM).
+This environment is restricted by a set of quotas including maximum amount of memory allocated per shell.
+For more information about quota management for remote shell refer to [MSDN](https://msdn.microsoft.com/en-us/library/windows/desktop/ee309367(v=vs.85).aspx) article.
+We recommend to keep the default value of 1024MB for MaxMemoryPerShellMB quota. If your application requires more virtual memory you can change the setting yourself in operating system or configure the provisioner to do so, unless the quota is protected by a Group Policy.
+
+```
+turbo.max_memory_per_shell = 2048
+```
+
+If the provisioning failed because of System.StackOverFlowException or System.OutOfMemoryException we recommend to increase MaxMemoryPerShellMB quota.
 
 ## Development
 
