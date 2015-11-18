@@ -13,7 +13,7 @@ en:
     check_install: "Checking Turbo installation..."
     already_installed: "Turbo is installed on this machine. Skipping installation..."
     not_installed: "Turbo is not installed on this machine. Installing..."
-    install_failed: "Turbo installation failed. Something went terribly wrong. Login to the guest machine and install it manually."
+    install_failed: "Something went terribly wrong. Turbo installation failed. Login to the guest machine and install it manually."
 
     no_images_to_run: "No images specified to run in the container"
 

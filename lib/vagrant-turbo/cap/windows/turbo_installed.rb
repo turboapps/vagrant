@@ -4,8 +4,7 @@ module VagrantPlugins
       module Windows
         module TurboInstalled
           def self.turbo_installed(machine)
-            command = "if ((& turbo version) -Match 'Version: *') { exit 0 } else { exit 1 }"
-            machine.communicate.test(command, sudo: true)
+            machine.communicate.test('turbo version', sudo: true)
           end
         end
       end
