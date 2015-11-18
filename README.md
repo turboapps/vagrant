@@ -5,7 +5,7 @@ The plugin supports a subset of features available in Turbo Console and Turbo Sh
 * Install the latest version of the Turbo Plugin
 * Login to the Turbo Hub
 * Run a Turbo container
-* Import an image from the local file system on guest machine
+* Add an image to the local repository
 * Build an image using Turbo Shell
 * Manage quota for remote shells
 
@@ -90,7 +90,7 @@ turbo.run :r do |r|
 end
 ```
 
-`turbo run` parameters were explained in the [reference document](https://turbo.net/docs/reference#run).
+`turbo run` parameters were explained in the [reference](https://turbo.net/docs/reference#run).
 
 Vagrant extension offers extra arguments which simplify execution of bat and PowerShell scripts inside a container.
 
@@ -123,6 +123,50 @@ end
 ```
 
 Using `path`, `inline`, `startup_file` parameters together in one run block is currently not supported.
+
+### Add an image to the local repository
+Define import block to build an image from the specified file on guest machine and add it to the local repository.
+Supported file formats include exe, msi and svm.
+
+```
+turbo.import :i do |i|
+    i.name = "chocolatey/chocolatey"
+    i.path = "C:\\vagrant\\chocolatey.svm"
+    i.overwrite = true
+    i.format = "svm"
+end
+```
+
+Detailed specification of turbo import is described in [reference](https://turbo.net/docs/reference/command-line#import).
+
+### Build an image using Turbo Shell
+shell block allows to specify Turbo Shell instructions which should be executed in provisioning.
+Instructions can be defined in TurboScript or passed inline.
+
+```
+turbo.shell :s do |s|
+    s.path = "C:\\sources\\turbo.me"
+end
+```
+
+TurboScript file should be available on host machine.
+
+```
+	turbo.shell :s do |s|
+		s.inline = <<-EOS
+layer clean
+using wget
+setworkdir C:\\
+cmd wget.exe http://downloads.sourceforge.net/sevenzip/7z920.exe
+env path="@PROGRAMFILESX86@\\7-zip"
+startup file ("@PROGRAMFILESX86@\\7-zip\\7zFM.exe")
+cmd del C:\\7z920.exe /Q
+commit --no-base --overwrite 7zip
+EOS
+	end
+```
+
+Check [TurboScript reference](https://turbo.net/docs/reference/turboscript) to get the complete list of available commands.
 
 ### Manage quota for remote shells
 Vagrant executes provisioning using Windows Remote Management (WinRM).
