@@ -144,9 +144,6 @@ module VagrantPlugins
         end
       end
 
-      def cleanup
-      end
-
       def upload_startup_file(comm, guest_dir, *lines)
         file_name = 'turbo-launch.bat'
         startup_file = File.join(guest_dir, file_name)
